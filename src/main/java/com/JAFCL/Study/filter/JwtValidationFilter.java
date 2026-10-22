@@ -40,9 +40,30 @@ public class JwtValidationFilter extends OncePerRequestFilter {
                         Long id = jwtService.extractUserId(token);
                         Long rolId = jwtService.extractRolId(token);
 
+                        request.setAttribute("username", username);
+                        request.setAttribute("userId", id);
+                        request.setAttribute("rolId", rolId);
+
+                        filterChain.doFilter(request, response);
+
+                    } else {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Token is invalid or expired\"}");
                     }
-                }
-        
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Validation failed\"}");
+                }        
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        return path.startsWith("/api/v1/users/auth/");
     }
 
 }
